@@ -1,0 +1,162 @@
+[
+  {
+    "id": "demo_001",
+    "amount": 4200.00,
+    "payee": "ABC Holdings Ltd",
+    "payee_is_new": true,
+    "timestamp": "2026-01-05T03:47:00Z",
+    "reference": "Invoice 2847"
+  },
+  {
+    "id": "demo_002",
+    "amount": 2100.00,
+    "payee": "Acme Supplies",
+    "payee_is_new": false,
+    "timestamp": "2026-01-05T02:15:00Z",
+    "reference": "URGENT Transfer"
+  },
+  {
+    "id": "demo_003",
+    "amount": 1800.00,
+    "payee": "NewVendor Co",
+    "payee_is_new": true,
+    "timestamp": "2026-01-05T14:30:00Z",
+    "reference": "PO-2026-445"
+  },
+  {
+    "id": "demo_004",
+    "amount": 1500.00,
+    "payee": "Trusted Supplier Ltd",
+    "payee_is_new": false,
+    "timestamp": "2026-01-05T10:15:00Z",
+    "reference": "Monthly order"
+  },
+  {
+    "id": "demo_005",
+    "amount": 125.50,
+    "payee": "Office Supplies Direct",
+    "payee_is_new": false,
+    "timestamp": "2026-01-04T09:30:00Z",
+    "reference": "Stationery order"
+  },
+  {
+    "id": "demo_006",
+    "amount": 89.99,
+    "payee": "Cloud Services Ltd",
+    "payee_is_new": false,
+    "timestamp": "2026-01-04T10:00:00Z",
+    "reference": "Monthly subscription"
+  },
+  {
+    "id": "demo_007",
+    "amount": 450.00,
+    "payee": "Marketing Agency",
+    "payee_is_new": false,
+    "timestamp": "2026-01-04T11:15:00Z",
+    "reference": "Campaign fee"
+  },
+  {
+    "id": "demo_008",
+    "amount": 275.00,
+    "payee": "IT Solutions",
+    "payee_is_new": false,
+    "timestamp": "2026-01-04T14:00:00Z",
+    "reference": "Support contract"
+  },
+  {
+    "id": "demo_009",
+    "amount": 680.00,
+    "payee": "Logistics Partner",
+    "payee_is_new": false,
+    "timestamp": "2026-01-04T15:30:00Z",
+    "reference": "Shipping costs"
+  },
+  {
+    "id": "demo_010",
+    "amount": 150.00,
+    "payee": "Catering Services",
+    "payee_is_new": false,
+    "timestamp": "2026-01-04T12:00:00Z",
+    "reference": "Team lunch"
+  },
+  {
+    "id": "demo_011",
+    "amount": 320.00,
+    "payee": "Print Shop",
+    "payee_is_new": false,
+    "timestamp": "2026-01-03T09:45:00Z",
+    "reference": "Brochure printing"
+  },
+  {
+    "id": "demo_012",
+    "amount": 55.00,
+    "payee": "Domain Registrar",
+    "payee_is_new": false,
+    "timestamp": "2026-01-03T10:30:00Z",
+    "reference": "Domain renewal"
+  },
+  {
+    "id": "demo_013",
+    "amount": 799.00,
+    "payee": "Software Vendor",
+    "payee_is_new": false,
+    "timestamp": "2026-01-03T11:00:00Z",
+    "reference": "License renewal"
+  },
+  {
+    "id": "demo_014",
+    "amount": 180.00,
+    "payee": "Cleaning Services",
+    "payee_is_new": false,
+    "timestamp": "2026-01-03T16:00:00Z",
+    "reference": "Weekly cleaning"
+  },
+  {
+    "id": "demo_015",
+    "amount": 420.00,
+    "payee": "Training Provider",
+    "payee_is_new": false,
+    "timestamp": "2026-01-03T14:30:00Z",
+    "reference": "Staff training"
+  },
+  {
+    "id": "demo_016",
+    "amount": 95.00,
+    "payee": "Utilities Co",
+    "payee_is_new": false,
+    "timestamp": "2026-01-02T09:00:00Z",
+    "reference": "Electric bill"
+  },
+  {
+    "id": "demo_017",
+    "amount": 550.00,
+    "payee": "Equipment Rental",
+    "payee_is_new": false,
+    "timestamp": "2026-01-02T10:15:00Z",
+    "reference": "Monthly rental"
+  },
+  {
+    "id": "demo_018",
+    "amount": 230.00,
+    "payee": "Security Services",
+    "payee_is_new": false,
+    "timestamp": "2026-01-02T11:30:00Z",
+    "reference": "Monitoring fee"
+  },
+  {
+    "id": "demo_019",
+    "amount": 75.00,
+    "payee": "Courier Express",
+    "payee_is_new": false,
+    "timestamp": "2026-01-02T13:00:00Z",
+    "reference": "Delivery charges"
+  },
+  {
+    "id": "demo_020",
+    "amount": 340.00,
+    "payee": "Legal Advisors",
+    "payee_is_new": false,
+    "timestamp": "2026-01-02T15:00:00Z",
+    "reference": "Consultation fee"
+  }
+]

@@ -20,6 +20,8 @@ from app.models import (
     TransactionCreate,
     TransactionDetailResponse,
     TransactionResponse,
+    AuditLogEntry,
+    TransactionAuditResponse,
 )
 from app.services.anomaly_detector import (
     AnomalyDetectorProtocol,
@@ -243,4 +245,129 @@ async def get_transaction(
         explanation=explanation_data["explanation"],
         risk_factors=explanation_data["risk_factors"],
         recommended_action=explanation_data["recommended_action"],
+    )
+
+
+@app.post(
+    "/transactions/{transaction_id}/approve",
+    response_model=TransactionResponse,
+    tags=["Transactions"],
+    summary="Mark transaction as approved/legitimate",
+)
+async def approve_transaction(transaction_id: str):
+    """
+    Approve a transaction, marking it as legitimate.
+    
+    Updates the transaction status to 'approved'.
+    """
+    transaction = transaction_store.get(transaction_id)
+    
+    if transaction is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Transaction with ID {transaction_id} not found",
+        )
+    
+    # Update status
+    transaction_store.update(
+        transaction_id,
+        {
+            "status": "approved",
+            "reviewed_at": datetime.utcnow(),
+        },
+        audit_action="approved",
+        audit_details="Transaction marked as legitimate"
+    )
+    
+    updated = transaction_store.get(transaction_id)
+    
+    return TransactionResponse(
+        id=updated["id"],
+        amount=updated["amount"],
+        payee=updated["payee"],
+        timestamp=updated["timestamp"],
+        reference=updated["reference"],
+        risk_score=updated["risk_score"],
+        risk_level=updated["risk_level"],
+        created_at=updated["created_at"],
+    )
+
+
+@app.get(
+    "/transactions/{transaction_id}/audit",
+    response_model=TransactionAuditResponse,
+    tags=["Transactions"],
+    summary="Get audit trail for a transaction",
+)
+async def get_audit_trail(transaction_id: str):
+    """
+    Retrieve the complete audit trail for a transaction.
+    
+    Shows all actions taken on the transaction (creation, approvals, rejections, etc).
+    """
+    transaction = transaction_store.get(transaction_id)
+    
+    if transaction is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Transaction with ID {transaction_id} not found",
+        )
+    
+    # Get audit log entries
+    audit_entries = transaction_store.get_audit_trail(transaction_id)
+    
+    return TransactionAuditResponse(
+        transaction_id=transaction_id,
+        audit_trail=[
+            AuditLogEntry(
+                timestamp=entry["timestamp"],
+                action=entry["action"],
+                details=entry.get("details", "")
+            )
+            for entry in audit_entries
+        ]
+    )
+
+@app.post(
+    "/transactions/{transaction_id}/reject",
+    response_model=TransactionResponse,
+    tags=["Transactions"],
+    summary="Mark transaction as fraud/rejected",
+)
+async def reject_transaction(transaction_id: str):
+    """
+    Reject a transaction, marking it as fraud.
+    
+    Updates the transaction status to 'rejected'.
+    """
+    transaction = transaction_store.get(transaction_id)
+    
+    if transaction is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Transaction with ID {transaction_id} not found",
+        )
+    
+    # Update status
+    transaction_store.update(
+        transaction_id,
+        {
+            "status": "rejected",
+            "reviewed_at": datetime.utcnow(),
+        },
+        audit_action="rejected",
+        audit_details="Transaction marked as fraud"
+    )
+    
+    updated = transaction_store.get(transaction_id)
+    
+    return TransactionResponse(
+        id=updated["id"],
+        amount=updated["amount"],
+        payee=updated["payee"],
+        timestamp=updated["timestamp"],
+        reference=updated["reference"],
+        risk_score=updated["risk_score"],
+        risk_level=updated["risk_level"],
+        created_at=updated["created_at"],
     )

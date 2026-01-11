@@ -105,6 +105,19 @@ cd frontend && npm run dev
 
 **Seed data:** Automatically loaded on startup from `app/data/demo_transactions.json` (see `app/main.py:lifespan()`)
 
+### Deployment Architecture
+
+**Production Stack:**
+- **Backend:** Render.com (FastAPI with Gunicorn + Uvicorn workers)
+  - Config: `render.yaml` + `Procfile`
+  - Command: `gunicorn --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000 -w 2 --timeout 120 app.main:app`
+  - Health check: `/health` endpoint
+- **Frontend:** Vercel (Next.js 14)
+  - Environment: Set `NEXT_PUBLIC_API_URL` to Render backend URL
+  - Auto-deploys from `main` branch
+
+**Critical:** Frontend's `NEXT_PUBLIC_API_URL` must point to production backend, not localhost
+
 ### Provider Configuration
 
 Controlled via environment variables (defaults work without keys):
@@ -136,3 +149,14 @@ PATTERN_PROVIDER=local_json # local_json | azure_search | mock
 - **Don't call explanations on POST** → it's expensive, only generate on GET detail view
 - **Don't forget CORS** → middleware already configured in `app/main.py`
 - **Don't use `cache: 'force-cache'`** in frontend → use `cache: 'no-store'` for real-time fraud data
+- **Don't use in-memory storage for production** → current `TransactionStore` loses data on restart (replace with database)
+
+## Current Production Gaps
+
+**Blocking Issues:**
+1. **No persistence** - In-memory storage loses data on Render dyno restart
+2. **No authentication** - API is completely open (anyone can access)
+3. **No transaction creation UI** - Users must use API directly
+4. **Frontend env mismatch** - Likely pointing to localhost instead of Render
+
+See [PRODUCTION_READINESS.md](../PRODUCTION_READINESS.md) for complete assessment and roadmap.

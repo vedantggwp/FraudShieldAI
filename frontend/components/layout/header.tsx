@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Shield } from "lucide-react";
+import { Shield, Settings } from "lucide-react";
 import { ThemeToggle } from "../ui/theme-toggle";
 
 export function Header() {
@@ -17,7 +17,14 @@ export function Header() {
             </p>
           </div>
         </Link>
-        <ThemeToggle />
+        <div className="flex items-center gap-2">
+          <Link href="/settings" title="Settings">
+            <button className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">
+              <Settings className="h-5 w-5" />
+            </button>
+          </Link>
+          <ThemeToggle />
+        </div>
       </div>
     </header>
   );

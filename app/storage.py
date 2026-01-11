@@ -15,6 +15,7 @@ class TransactionStore:
 
     def __init__(self):
         self._transactions: dict[str, dict] = {}
+        self._audit_logs: dict[str, list[dict]] = {}  # transaction_id -> list of audit entries
         self._lock = Lock()
 
     def add(self, transaction_data: dict) -> str:
@@ -32,8 +33,17 @@ class TransactionStore:
             self._transactions[transaction_id] = {
                 **transaction_data,
                 "id": transaction_id,
+                "status": "pending",  # Default status
                 "created_at": datetime.utcnow(),
             }
+            # Log creation
+            self._audit_logs[transaction_id] = [
+                {
+                    "timestamp": datetime.utcnow(),
+                    "action": "created",
+                    "details": f"Transaction created with amount £{transaction_data.get('amount', 0):.2f}"
+                }
+            ]
         return transaction_id
 
     def get(self, transaction_id: str) -> Optional[dict]:
@@ -47,6 +57,18 @@ class TransactionStore:
             dict or None: Transaction data if found
         """
         return self._transactions.get(transaction_id)
+
+    def get_audit_trail(self, transaction_id: str) -> list[dict]:
+        """
+        Retrieve audit trail for a transaction.
+
+        Args:
+            transaction_id: The transaction UUID
+
+        Returns:
+            list: List of audit log entries
+        """
+        return self._audit_logs.get(transaction_id, [])
 
     def get_all(self, skip: int = 0, limit: int = 100) -> tuple[list[dict], int]:
         """
@@ -65,13 +87,15 @@ class TransactionStore:
             all_items.sort(key=lambda x: x["created_at"], reverse=True)
             return all_items[skip : skip + limit], total
 
-    def update(self, transaction_id: str, updates: dict) -> bool:
+    def update(self, transaction_id: str, updates: dict, audit_action: Optional[str] = None, audit_details: str = "") -> bool:
         """
         Update a transaction with new data.
 
         Args:
             transaction_id: The transaction UUID
             updates: Dict of fields to update
+            audit_action: Optional audit log action name (e.g., "approved", "rejected")
+            audit_details: Optional details for audit log
 
         Returns:
             bool: True if update succeeded
@@ -79,6 +103,15 @@ class TransactionStore:
         with self._lock:
             if transaction_id in self._transactions:
                 self._transactions[transaction_id].update(updates)
+                
+                # Log the update if action provided
+                if audit_action and transaction_id in self._audit_logs:
+                    self._audit_logs[transaction_id].append({
+                        "timestamp": datetime.utcnow(),
+                        "action": audit_action,
+                        "details": audit_details
+                    })
+                
                 return True
             return False
 
@@ -102,6 +135,15 @@ class TransactionStore:
                         **item,
                         "created_at": item.get("created_at", datetime.utcnow()),
                     }
+                    # Initialize audit log
+                    if transaction_id not in self._audit_logs:
+                        self._audit_logs[transaction_id] = [
+                            {
+                                "timestamp": item.get("created_at", datetime.utcnow()),
+                                "action": "created",
+                                "details": "Seed transaction"
+                            }
+                        ]
             else:
                 self.add(item)
             count += 1
@@ -111,7 +153,4 @@ class TransactionStore:
         """Clear all transactions (useful for testing)."""
         with self._lock:
             self._transactions.clear()
-
-
-# Global singleton instance
-transaction_store = TransactionStore()
+            self._audit_logs.clear()

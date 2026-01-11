@@ -13,6 +13,8 @@ import { RiskBadge } from "@/components/detail/risk-badge";
 import { ConfidenceMeter } from "@/components/detail/confidence-meter";
 import { FactorCard, NoFactors } from "@/components/detail/factor-card";
 import { ActionButtons } from "@/components/detail/action-buttons";
+import { AuditTrail } from "@/components/detail/audit-trail";
+
 
 export default function TransactionDetailPage() {
   const params = useParams();
@@ -117,8 +119,10 @@ export default function TransactionDetailPage() {
       {/* Action Buttons */}
       <section>
         <h2 className="text-lg font-semibold mb-4">Take Action</h2>
-        <ActionButtons />
+        <ActionButtons transactionId={transaction.id} riskLevel={transaction.risk_level} />
       </section>
-    </motion.div>
-  );
-}
+
+      {/* Audit Trail */}
+      <section>
+        <AuditTrail transactionId={transaction.id} />
+      </section>

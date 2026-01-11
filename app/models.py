@@ -100,6 +100,19 @@ class PaginatedResponse(BaseModel):
     page_size: int = Field(..., ge=1, le=100, description="Items per page")
     total_pages: int = Field(..., ge=0, description="Total number of pages")
 
+class AuditLogEntry(BaseModel):
+    """Single audit log entry."""
+
+    timestamp: datetime = Field(..., description="When the action occurred")
+    action: str = Field(..., description="Action taken (created, approved, rejected, viewed)")
+    details: str = Field(default="", description="Additional details about the action")
+
+
+class TransactionAuditResponse(BaseModel):
+    """Audit trail for a transaction."""
+
+    transaction_id: str = Field(..., description="Transaction ID")
+    audit_trail: list[AuditLogEntry] = Field(..., description="List of audit log entries")
 
 class HealthResponse(BaseModel):
     """Health check response."""

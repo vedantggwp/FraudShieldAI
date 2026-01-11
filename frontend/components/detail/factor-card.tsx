@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { parseRiskFactor, ParsedRiskFactor } from "@/lib/utils";
+import { parseRiskFactor } from "@/lib/utils";
 
 interface FactorCardProps {
   factor: string;

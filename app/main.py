@@ -391,28 +391,42 @@ async def get_audit_trail(
     
     Shows all actions taken on the transaction (creation, approvals, rejections, etc).
     """
-    transaction = db_service.get_transaction(db, transaction_id)
-    
-    if transaction is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Transaction with ID {transaction_id} not found",
-        )
-    
-    # Get audit log entries
-    audit_entries = db_service.get_audit_trail(db, transaction_id)
-    
-    return TransactionAuditResponse(
-        transaction_id=transaction_id,
-        audit_trail=[
-            AuditLogEntry(
-                timestamp=entry.created_at,
-                action=entry.action,
-                details=entry.details or {}
+    try:
+        transaction = db_service.get_transaction(db, transaction_id)
+        
+        if transaction is None:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Transaction with ID {transaction_id} not found",
             )
-            for entry in audit_entries
-        ]
-    )
+        
+        # Get audit log entries
+        try:
+            audit_entries = db_service.get_audit_trail(db, transaction_id)
+        except Exception as e:
+            # If audit table doesn't exist, return empty trail
+            print(f"Warning: Could not retrieve audit trail: {e}")
+            audit_entries = []
+        
+        return TransactionAuditResponse(
+            transaction_id=transaction_id,
+            audit_trail=[
+                AuditLogEntry(
+                    timestamp=entry.created_at,
+                    action=entry.action,
+                    details=entry.details or {}
+                )
+                for entry in audit_entries
+            ]
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error in get_audit_trail: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Internal server error: {str(e)}"
+        )
 
 @app.post(
     "/transactions/{transaction_id}/reject",

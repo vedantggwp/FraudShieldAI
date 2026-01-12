@@ -185,7 +185,11 @@ export default function UploadTransactionsPage() {
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
-              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
+              onClick={() => {
+                const input = document.getElementById('csv-upload') as HTMLInputElement;
+                input?.click();
+              }}
+              className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
                 isDragging
                   ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
                   : "border-zinc-300 dark:border-zinc-700 hover:border-zinc-400 dark:hover:border-zinc-600"
@@ -201,11 +205,12 @@ export default function UploadTransactionsPage() {
                 </div>
               </div>
               <input
+                id="csv-upload"
                 type="file"
                 accept=".csv"
                 onChange={handleFileInput}
                 disabled={isUploading}
-                className="absolute inset-0 opacity-0 cursor-pointer"
+                className="hidden"
               />
             </div>
           )}
@@ -254,28 +259,26 @@ export default function UploadTransactionsPage() {
           </div>
 
           {/* Upload Button */}
-          <label className="block">
-            <Button
-              disabled={isUploading}
-              className="w-full"
-              onClick={() => {
-                const input = document.querySelector('input[type="file"]') as HTMLInputElement;
-                input?.click();
-              }}
-            >
-              {isUploading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                <>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Select CSV File
-                </>
-              )}
-            </Button>
-          </label>
+          <Button
+            disabled={isUploading || !!results}
+            className="w-full"
+            onClick={() => {
+              const input = document.getElementById('csv-upload') as HTMLInputElement;
+              input?.click();
+            }}
+          >
+            {isUploading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                <Upload className="h-4 w-4 mr-2" />
+                Select CSV File
+              </>
+            )}
+          </Button>
         </div>
       </Card>
     </div>

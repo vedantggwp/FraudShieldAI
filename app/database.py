@@ -29,12 +29,12 @@ _db_available = True
 
 try:
     # Create engine with connection pool settings
+    # Note: connect_args timeout only works for SQLite, not PostgreSQL
     engine = create_engine(
         DATABASE_URL,
         pool_pre_ping=True,  # Verify connections before using
         pool_size=5,
         max_overflow=10,
-        connect_args={"timeout": 5},  # 5 second timeout
     )
     
     # Test connection on startup

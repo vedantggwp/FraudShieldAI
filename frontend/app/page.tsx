@@ -63,7 +63,7 @@ export default function DashboardPage() {
                 Amount at Risk
               </p>
               <p className="text-2xl font-bold text-red-600 dark:text-red-400">
-                £{formatAmount(stats.atRisk)}
+                {formatAmount(stats.atRisk)}
               </p>
               <p className="text-xs text-zinc-500 dark:text-zinc-500">
                 High-risk transactions

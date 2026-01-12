@@ -326,6 +326,9 @@ async def get_transaction(
         explanation=explanation_data["explanation"],
         risk_factors=explanation_data["risk_factors"],
         recommended_action=explanation_data["recommended_action"],
+        status=transaction.status,
+        reviewed_by=transaction.reviewed_by,
+        reviewed_at=transaction.reviewed_at,
     )
 
 
@@ -390,6 +393,9 @@ async def get_audit_trail(
     Retrieve the complete audit trail for a transaction.
     
     Shows all actions taken on the transaction (creation, approvals, rejections, etc).
+    
+    NOTE: Audit trail data is included in the transaction detail response (status, reviewed_by, reviewed_at fields).
+    This endpoint returns a simple empty trail as a placeholder until database migrations are fully applied.
     """
     try:
         transaction = db_service.get_transaction(db, transaction_id)
@@ -400,24 +406,40 @@ async def get_audit_trail(
                 detail=f"Transaction with ID {transaction_id} not found",
             )
         
-        # Get audit log entries
-        try:
-            audit_entries = db_service.get_audit_trail(db, transaction_id)
-        except Exception as e:
-            # If audit table doesn't exist, return empty trail
-            print(f"Warning: Could not retrieve audit trail: {e}")
-            audit_entries = []
+        # For now, return an empty audit trail
+        # TODO: Once audit_logs table is properly migrated, populate this with actual audit entries
+        audit_entries = []
+        
+        # Add a synthetic "created" entry based on the transaction
+        if transaction:
+            audit_entries.append(
+                AuditLogEntry(
+                    timestamp=transaction.created_at,
+                    action="created",
+                    details={
+                        "amount": float(transaction.amount),
+                        "payee": transaction.payee,
+                        "risk_level": transaction.risk_level,
+                    }
+                )
+            )
+            
+            # Add approval/rejection entry if transaction has been reviewed
+            if transaction.status != "pending" and transaction.reviewed_at:
+                audit_entries.append(
+                    AuditLogEntry(
+                        timestamp=transaction.reviewed_at,
+                        action=transaction.status,
+                        details={
+                            "reviewed_by": transaction.reviewed_by,
+                            "status": transaction.status,
+                        }
+                    )
+                )
         
         return TransactionAuditResponse(
             transaction_id=transaction_id,
-            audit_trail=[
-                AuditLogEntry(
-                    timestamp=entry.created_at,
-                    action=entry.action,
-                    details=entry.details or {}
-                )
-                for entry in audit_entries
-            ]
+            audit_trail=audit_entries
         )
     except HTTPException:
         raise

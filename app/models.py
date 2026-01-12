@@ -5,7 +5,7 @@ Defines request/response schemas for the API.
 """
 
 from datetime import datetime
-from typing import Literal
+from typing import Literal, Optional
 from pydantic import BaseModel, Field
 
 
@@ -66,6 +66,9 @@ class TransactionDetailResponse(TransactionResponse):
     explanation: str = Field(..., description="Summary explanation")
     risk_factors: list[str] = Field(default_factory=list, description="List of risk factors")
     recommended_action: str = Field(..., description="Recommended action to take")
+    status: str = Field(default="pending", description="Transaction status (pending, approved, rejected)")
+    reviewed_by: Optional[str] = Field(default=None, description="User who reviewed the transaction")
+    reviewed_at: Optional[datetime] = Field(default=None, description="When the transaction was reviewed")
 
     model_config = {
         "json_schema_extra": {

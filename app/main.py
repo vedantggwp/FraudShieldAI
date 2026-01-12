@@ -14,6 +14,8 @@ from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 
+from app.auth_routes import router as auth_router
+from app.auth import get_current_user, OptionalAuthBackend
 from app.config import RISK_THRESHOLDS
 from app.models import (
     HealthResponse,
@@ -34,6 +36,7 @@ from app.services.explanation_generator import (
 )
 from app.services.database_service import db_service
 from app.database import get_db
+from app.db_models import User
 
 
 def get_risk_level(score: float) -> str:
@@ -134,6 +137,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Register authentication routes
+app.include_router(auth_router)
 
 
 @app.get("/", tags=["Root"])

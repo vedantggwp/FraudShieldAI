@@ -5,6 +5,7 @@ SQLAlchemy ORM models for database tables.
 """
 
 from datetime import datetime
+from uuid import UUID as PyUUID
 from sqlalchemy import Column, String, Float, DateTime, Boolean, Text, JSON
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
@@ -53,10 +54,10 @@ class Transaction(Base):
 
 
 class User(Base):
-    """User model for authentication (future enhancement)."""
+    """User model for authentication."""
     
-    __tablename__ = "users"
-
+    __tablename__ = "fastapi_user"
+    
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     email = Column(String(255), unique=True, nullable=False, index=True)
     hashed_password = Column(String(255), nullable=False)

@@ -1,7 +1,7 @@
 """
 FraudShield Authentication Configuration
 
-JWT-based authentication using FastAPI-JWT with SQLAlchemy backend.
+JWT-based authentication using JWT with SQLAlchemy backend.
 Provides user registration, login, and session management.
 """
 
@@ -11,7 +11,7 @@ from typing import Optional
 from uuid import UUID
 
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthCredentials
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
@@ -66,7 +66,7 @@ def decode_token(token: str) -> dict:
         return None
 
 
-async def get_current_user(credentials: HTTPAuthCredentials = Depends(security), db: Session = Depends(SessionLocal)) -> User:
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(SessionLocal)) -> User:
     """
     Get the current authenticated user from JWT token.
     
@@ -127,7 +127,7 @@ class OptionalAuthBackend:
     """
     
     @staticmethod
-    async def get_user_optional(credentials: HTTPAuthCredentials = Depends(security), db: Session = Depends(SessionLocal)) -> Optional[User]:
+    async def get_user_optional(credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(SessionLocal)) -> Optional[User]:
         """Get current user if authenticated, else return None."""
         try:
             return await get_current_user(credentials, db)

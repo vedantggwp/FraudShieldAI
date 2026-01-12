@@ -105,7 +105,7 @@ class AuditLogEntry(BaseModel):
 
     timestamp: datetime = Field(..., description="When the action occurred")
     action: str = Field(..., description="Action taken (created, approved, rejected, viewed)")
-    details: str = Field(default="", description="Additional details about the action")
+    details: dict = Field(default_factory=dict, description="Additional details about the action")
 
 
 class TransactionAuditResponse(BaseModel):

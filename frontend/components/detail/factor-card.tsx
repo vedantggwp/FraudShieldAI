@@ -4,7 +4,6 @@ import { parseRiskFactor } from "@/lib/utils";
 
 interface FactorCardProps {
   factor: string;
-  index: number;
 }
 
 const iconComponents: Record<string, string> = {
@@ -14,7 +13,7 @@ const iconComponents: Record<string, string> = {
   "⚠️": "bg-red-500/10 text-red-500",
 };
 
-export function FactorCard({ factor, index }: FactorCardProps) {
+export function FactorCard({ factor }: FactorCardProps) {
   const parsed = parseRiskFactor(factor);
   const iconStyle = iconComponents[parsed.icon] || iconComponents["⚠️"];
 
@@ -34,7 +33,7 @@ export function FactorCard({ factor, index }: FactorCardProps) {
           {parsed.description}
         </p>
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -52,6 +51,6 @@ export function NoFactors() {
           This transaction appears normal based on our analysis.
         </p>
       </div>
-    </motion.div>
+    </div>
   );
 }

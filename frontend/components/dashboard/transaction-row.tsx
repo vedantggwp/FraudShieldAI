@@ -11,7 +11,7 @@ interface TransactionRowProps {
   index: number;
 }
 
-export function TransactionRow({ transaction, index }: TransactionRowProps) {
+export function TransactionRow({ transaction }: TransactionRowProps) {
   const colors = riskColors[transaction.risk_level];
 
   return (

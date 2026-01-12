@@ -35,7 +35,7 @@ export function ActionButtons({ transactionId, riskLevel }: ActionButtonsProps) 
       setTimeout(() => {
         window.location.reload();
       }, 1500);
-    } catch (error) {
+    } catch {
       setToast({ type: "error", message: "Failed to approve transaction" });
     } finally {
       setIsLoading(false);
@@ -60,7 +60,7 @@ export function ActionButtons({ transactionId, riskLevel }: ActionButtonsProps) 
       setTimeout(() => {
         window.location.reload();
       }, 1500);
-    } catch (error) {
+    } catch {
       setToast({ type: "error", message: "Failed to reject transaction" });
     } finally {
       setIsLoading(false);
@@ -90,7 +90,7 @@ export function ActionButtons({ transactionId, riskLevel }: ActionButtonsProps) 
       {/* Action Buttons */}
       <div className="flex gap-3">
         <Button
-          variant="destructive"
+          variant="danger"
           className="flex-1"
           onClick={() => setShowRejectDialog(true)}
         >
@@ -156,7 +156,7 @@ export function ActionButtons({ transactionId, riskLevel }: ActionButtonsProps) 
                 </p>
                 {riskLevel === "low" && (
                   <p className="text-sm text-amber-600 dark:text-amber-400 mt-2 font-medium">
-                    ⚠️ This transaction has a LOW risk score. Are you sure it's fraud?
+                    ⚠️ This transaction has a LOW risk score. Are you sure it&apos;s fraud?
                   </p>
                 )}
               </div>
@@ -171,7 +171,7 @@ export function ActionButtons({ transactionId, riskLevel }: ActionButtonsProps) 
                 Cancel
               </Button>
               <Button
-                variant="destructive"
+                variant="danger"
                 className="flex-1"
                 onClick={handleReject}
                 disabled={isLoading}

@@ -17,10 +17,27 @@ export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [riskLevel, setRiskLevel] = useState<RiskLevel | "all">("all");
 
-  const { transactions, stats, isLoading, isError } = useTransactions({
-    searchQuery,
-    riskLevel,
+  const { transactions: allTransactions, isLoading, isError } = useTransactions();
+
+  // Client-side filtering
+  const transactions = allTransactions.filter((t) => {
+    const matchesSearch = 
+      t.payee.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      t.reference.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesRisk = riskLevel === "all" || t.risk_level === riskLevel;
+    return matchesSearch && matchesRisk;
   });
+
+  // Calculate stats from filtered transactions
+  const stats = {
+    total: transactions.length,
+    high: transactions.filter((t) => t.risk_level === "high").length,
+    medium: transactions.filter((t) => t.risk_level === "medium").length,
+    low: transactions.filter((t) => t.risk_level === "low").length,
+    atRisk: transactions
+      .filter((t) => t.risk_level === "high")
+      .reduce((sum, t) => sum + t.amount, 0),
+  };
 
   // Calculate fraud rate
   const fraudRate =

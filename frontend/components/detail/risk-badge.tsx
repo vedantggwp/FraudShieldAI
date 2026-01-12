@@ -10,7 +10,6 @@ interface RiskBadgeProps {
 
 export function RiskBadge({ level, className }: RiskBadgeProps) {
   const colors = riskColors[level];
-  const isHigh = level === "high";
 
   return (
     <div className={`inline-flex flex-col items-center justify-center p-6 rounded-2xl ${colors.bg} text-white ${className}`}>

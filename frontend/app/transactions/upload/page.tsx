@@ -73,8 +73,6 @@ export default function UploadTransactionsPage() {
 
       // Parse rows
       const transactions = [];
-      let successCount = 0;
-      let failCount = 0;
 
       for (let i = 1; i < lines.length; i++) {
         const values = lines[i].split(",").map((v) => v.trim());
@@ -109,10 +107,8 @@ export default function UploadTransactionsPage() {
           }
 
           transactions.push(transaction);
-          successCount++;
-        } catch (rowError) {
-          failCount++;
-          console.error(`Row ${i + 1} failed:`, rowError);
+        } catch (_rowError) {
+          console.error(`Row ${i + 1} failed:`, _rowError);
         }
       }
 
@@ -139,7 +135,7 @@ export default function UploadTransactionsPage() {
           } else {
             uploadFailedCount++;
           }
-        } catch (err) {
+        } catch {
           uploadFailedCount++;
         }
       }
@@ -155,8 +151,8 @@ export default function UploadTransactionsPage() {
           router.push("/");
         }, 2000);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to process file");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Failed to process file");
     } finally {
       setIsUploading(false);
     }

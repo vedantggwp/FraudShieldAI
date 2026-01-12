@@ -31,6 +31,7 @@ function AnimatedNumber({ value, duration = 1 }: { value: number; duration?: num
     };
 
     requestAnimationFrame(animate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, duration]);
 
   return <span className="tabular-nums">{displayValue}</span>;
@@ -41,13 +42,11 @@ function StatCard({
   value,
   icon: Icon,
   color,
-  delay,
 }: {
   label: string;
   value: number;
   icon: React.ElementType;
   color: string;
-  delay: number;
 }) {
   return (
     <div>
@@ -77,28 +76,24 @@ export function StatsRow({ total, high, medium, low }: StatsRowProps) {
         value={total}
         icon={BarChart3}
         color="bg-accent"
-        delay={0}
       />
       <StatCard
         label="High Risk"
         value={high}
         icon={AlertTriangle}
         color="bg-red-500"
-        delay={0.1}
       />
       <StatCard
         label="Medium Risk"
         value={medium}
         icon={AlertCircle}
         color="bg-amber-500"
-        delay={0.2}
       />
       <StatCard
         label="Low Risk"
         value={low}
         icon={CheckCircle}
         color="bg-emerald-500"
-        delay={0.3}
       />
     </div>
   );

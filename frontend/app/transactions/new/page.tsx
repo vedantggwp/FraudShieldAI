@@ -12,12 +12,9 @@ import { Card } from "@/components/ui/card";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-// Form validation schema
+// Form validation schema - define both input and output types
 const transactionSchema = z.object({
-  amount: z.coerce
-    .number()
-    .positive("Amount must be greater than 0")
-    .max(1000000, "Amount too large"),
+  amount: z.number().positive("Amount must be greater than 0").max(1000000, "Amount too large"),
   payee: z
     .string()
     .min(1, "Payee name is required")
@@ -27,7 +24,7 @@ const transactionSchema = z.object({
     .min(1, "Reference is required")
     .max(100, "Reference too long"),
   timestamp: z.string().min(1, "Timestamp is required"),
-  payee_is_new: z.boolean().default(false),
+  payee_is_new: z.boolean(),
 });
 
 type TransactionFormData = z.infer<typeof transactionSchema>;
@@ -253,7 +250,7 @@ export default function NewTransactionPage() {
       {/* Help Text */}
       <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
         <p className="text-sm text-blue-800 dark:text-blue-200">
-          <strong>Tip:</strong> Check "first-time transfer" if you've never sent money to this payee before. This helps our fraud detection system assess risk more accurately.
+          <strong>Tip:</strong> Check &ldquo;first-time transfer&rdquo; if you&apos;ve never sent money to this payee before. This helps our fraud detection system assess risk more accurately.
         </p>
       </Card>
     </div>

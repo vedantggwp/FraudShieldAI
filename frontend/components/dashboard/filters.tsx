@@ -1,10 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
-import { Search, Filter } from "lucide-react";
-import { useTransactions } from "@/hooks/use-transactions";
-import { Button } from "@/components/ui/button";
+import { Search } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { RiskLevel } from "@/lib/types";
 

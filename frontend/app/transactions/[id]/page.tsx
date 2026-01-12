@@ -85,7 +85,7 @@ export default function TransactionDetailPage() {
         <div className="space-y-3">
           {transaction.risk_factors.length > 0 ? (
             transaction.risk_factors.map((factor, index) => (
-              <FactorCard key={index} factor={factor} index={index} />
+              <FactorCard key={index} factor={factor} />
             ))
           ) : (
             <NoFactors />
@@ -96,19 +96,14 @@ export default function TransactionDetailPage() {
       {/* Recommended Action */}
       <section>
         <h2 className="text-lg font-semibold mb-4">Recommended Action</h2>
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="p-4 rounded-xl border-2 border-accent/20 bg-accent/5"
-        >
+        <div className="p-4 rounded-xl border-2 border-accent/20 bg-accent/5">
           <div className="flex items-start gap-3">
             <div className="flex-shrink-0 w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center">
               <Shield className="h-4 w-4 text-accent" />
             </div>
             <p className="text-lg">{transaction.recommended_action}</p>
           </div>
-        </motion.div>
+        </div>
       </section>
 
       {/* Action Buttons */}

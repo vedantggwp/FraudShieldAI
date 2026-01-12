@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { RiskLevel } from "@/lib/types";
 import { riskColors } from "@/lib/utils";
 
@@ -33,8 +32,8 @@ export function ConfidenceMeter({ confidence, level }: ConfidenceMeterProps) {
             fill="none"
             className="text-zinc-200 dark:text-zinc-700"
           />
-          {/* Animated progress circle */}
-          <motion.circle
+          {/* Progress circle */}
+          <circle
             cx="64"
             cy="64"
             r={radius}
@@ -44,22 +43,15 @@ export function ConfidenceMeter({ confidence, level }: ConfidenceMeterProps) {
             strokeLinecap="round"
             className={colors.text}
             strokeDasharray={circumference}
-            initial={{ strokeDashoffset: circumference }}
-            animate={{ strokeDashoffset }}
-            transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
+            strokeDashoffset={strokeDashoffset}
           />
         </svg>
 
         {/* Center text */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <motion.span
-            className="text-3xl font-bold tabular-nums"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-          >
+          <span className="text-3xl font-bold tabular-nums">
             {confidence}%
-          </motion.span>
+          </span>
         </div>
       </div>
     </div>

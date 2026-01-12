@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { Transaction } from "@/lib/types";
@@ -16,20 +15,8 @@ export function TransactionRow({ transaction, index }: TransactionRowProps) {
   const colors = riskColors[transaction.risk_level];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.05, duration: 0.3 }}
-    >
-      <Link href={`/transactions/${transaction.id}`}>
-        <motion.div
-          className="group flex items-center gap-4 p-4 rounded-lg border bg-[var(--card)] cursor-pointer"
-          whileHover={{
-            y: -2,
-            boxShadow: "0 8px 16px rgba(0,0,0,0.1)",
-          }}
-          transition={{ type: "spring", stiffness: 400, damping: 25 }}
-        >
+    <Link href={`/transactions/${transaction.id}`}>
+      <div className="group flex items-center gap-4 p-4 rounded-lg border bg-[var(--card)] cursor-pointer hover:-translate-y-0.5 hover:shadow-lg transition-all duration-200">
           {/* Risk indicator */}
           <div className="flex-shrink-0">
             <RiskDot level={transaction.risk_level} />
@@ -70,8 +57,7 @@ export function TransactionRow({ transaction, index }: TransactionRowProps) {
 
           {/* Chevron */}
           <ChevronRight className="h-5 w-5 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors" />
-        </motion.div>
-      </Link>
-    </motion.div>
+        </div>
+    </Link>
   );
 }

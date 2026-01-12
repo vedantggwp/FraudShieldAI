@@ -1,9 +1,9 @@
 "use client";
 
-import { motion, HTMLMotionProps } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { HTMLAttributes } from "react";
 
-interface CardProps extends HTMLMotionProps<"div"> {
+interface CardProps extends HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   className?: string;
   hover?: boolean;
@@ -11,25 +11,17 @@ interface CardProps extends HTMLMotionProps<"div"> {
 
 export function Card({ children, className, hover = false, ...props }: CardProps) {
   return (
-    <motion.div
+    <div
       className={cn(
         "rounded-xl border bg-[var(--card)] p-6",
         "shadow-sm",
+        hover && "hover:-translate-y-1 hover:shadow-lg transition-all duration-200",
         className
       )}
-      whileHover={
-        hover
-          ? {
-              y: -4,
-              boxShadow: "0 12px 24px rgba(0,0,0,0.1)",
-            }
-          : undefined
-      }
-      transition={{ type: "spring", stiffness: 300, damping: 20 }}
       {...props}
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
 

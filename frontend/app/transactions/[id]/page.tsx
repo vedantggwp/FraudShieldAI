@@ -2,7 +2,6 @@
 
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { ArrowLeft, Shield } from "lucide-react";
 import { useTransaction } from "@/hooks/use-transaction";
 import { formatAmount, formatFullTimestamp } from "@/lib/utils";
@@ -43,11 +42,7 @@ export default function TransactionDetailPage() {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="space-y-8 max-w-4xl mx-auto"
-    >
+    <div className="space-y-8 max-w-4xl mx-auto">
       {/* Back Button */}
       <Link href="/">
         <Button variant="ghost" className="gap-2">
@@ -125,4 +120,6 @@ export default function TransactionDetailPage() {
       {/* Audit Trail */}
       <section>
         <AuditTrail transactionId={transaction.id} />
-      </section>
+      </section>    </div>
+  );
+}

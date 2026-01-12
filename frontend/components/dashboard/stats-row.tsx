@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { BarChart3, AlertTriangle, AlertCircle, CheckCircle } from "lucide-react";
 import { Card } from "../ui/card";
@@ -51,11 +50,7 @@ function StatCard({
   delay: number;
 }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.4 }}
-    >
+    <div>
       <Card className="relative overflow-hidden">
         <div className={`absolute top-0 left-0 w-1 h-full ${color}`} />
         <div className="flex items-center gap-4">
@@ -70,7 +65,7 @@ function StatCard({
           </div>
         </div>
       </Card>
-    </motion.div>
+    </div>
   );
 }
 

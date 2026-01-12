@@ -1,6 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { parseRiskFactor } from "@/lib/utils";
 
 interface FactorCardProps {
@@ -20,12 +19,7 @@ export function FactorCard({ factor, index }: FactorCardProps) {
   const iconStyle = iconComponents[parsed.icon] || iconComponents["⚠️"];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: 0.2 + index * 0.1, duration: 0.4 }}
-      className="flex items-start gap-4 p-4 rounded-xl border bg-[var(--card)]"
-    >
+    <div className="flex items-start gap-4 p-4 rounded-xl border bg-[var(--card)]">
       <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-xl ${iconStyle}`}>
         {parsed.icon}
       </div>
@@ -46,11 +40,7 @@ export function FactorCard({ factor, index }: FactorCardProps) {
 
 export function NoFactors() {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="flex items-center gap-4 p-6 rounded-xl border border-emerald-500/20 bg-emerald-500/5"
-    >
+    <div className="flex items-center gap-4 p-6 rounded-xl border border-emerald-500/20 bg-emerald-500/5">
       <div className="flex-shrink-0 w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center text-2xl">
         ✓
       </div>

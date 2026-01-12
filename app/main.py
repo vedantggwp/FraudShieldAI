@@ -12,6 +12,7 @@ from pathlib import Path
 
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
 
 from app.config import RISK_THRESHOLDS
 from app.models import (
@@ -31,7 +32,8 @@ from app.services.explanation_generator import (
     ExplanationGeneratorProtocol,
     get_explanation_generator,
 )
-from app.storage import transaction_store
+from app.services.database_service import db_service
+from app.database import get_db
 
 
 def get_risk_level(score: float) -> str:
@@ -47,26 +49,71 @@ def get_risk_level(score: float) -> str:
 async def lifespan(app: FastAPI):
     """Load seed data on startup."""
     seed_file = Path(__file__).parent / "data" / "demo_transactions.json"
-    if seed_file.exists():
-        with open(seed_file) as f:
-            seed_data = json.load(f)
+    db = None
+    
+    try:
+        db = db_service.get_db()
+        
+        if seed_file.exists():
+            with open(seed_file) as f:
+                seed_data = json.load(f)
 
-            detector = get_anomaly_detector()
-            for item in seed_data:
-                # Convert timestamp string to datetime
-                if isinstance(item.get("timestamp"), str):
-                    item["timestamp"] = datetime.fromisoformat(
-                        item["timestamp"].replace("Z", "+00:00")
+                detector = get_anomaly_detector()
+                generator = get_explanation_generator()
+                
+                count = 0
+                for item in seed_data:
+                    # Convert timestamp string to datetime
+                    if isinstance(item.get("timestamp"), str):
+                        item["timestamp"] = datetime.fromisoformat(
+                            item["timestamp"].replace("Z", "+00:00")
+                        )
+
+                    # Skip if transaction already exists
+                    existing = db_service.get_transaction(db, item.get("id"))
+                    if existing:
+                        continue
+
+                    # Calculate risk score and factors
+                    risk_score, factors = detector.calculate_risk_score(item)
+                    risk_level = get_risk_level(risk_score)
+                    
+                    # Generate explanation
+                    explanation_data = generator.generate_explanation(
+                        transaction=item,
+                        risk_score=risk_score,
+                        factors=factors,
                     )
 
-                # Calculate risk score and factors
-                risk_score, factors = detector.calculate_risk_score(item)
-                item["risk_score"] = risk_score
-                item["risk_level"] = get_risk_level(risk_score)
-                item["factors"] = factors
-
-            count = transaction_store.load_seed_data(seed_data)
-            print(f"FraudShield: Loaded {count} seed transactions")
+                    # Create transaction with all data
+                    db_service.create_transaction(
+                        db,
+                        amount=item["amount"],
+                        payee=item["payee"],
+                        timestamp=item["timestamp"],
+                        reference=item["reference"],
+                        payee_is_new=item.get("payee_is_new", False),
+                        risk_score=risk_score,
+                        risk_level=risk_level,
+                        factors=factors,
+                        confidence=explanation_data.get("confidence"),
+                        explanation=explanation_data.get("explanation"),
+                        risk_factors_detailed=explanation_data.get("risk_factors"),
+                        recommended_action=explanation_data.get("recommended_action"),
+                    )
+                    count += 1
+                
+                print(f"FraudShield: Loaded {count} seed transactions into database")
+    except Exception as e:
+        print(f"FraudShield: Warning - Could not load seed data: {e}")
+        print("FraudShield: Running without seed data. Database may not be available.")
+    finally:
+        if db:
+            try:
+                db.close()
+            except Exception:
+                pass
+    
     yield
     print("FraudShield: Shutting down")
 
@@ -115,6 +162,7 @@ async def health_check():
 )
 async def create_transaction(
     transaction: TransactionCreate,
+    db: Session = Depends(get_db),
     detector: AnomalyDetectorProtocol = Depends(get_anomaly_detector),
 ):
     """
@@ -130,25 +178,28 @@ async def create_transaction(
     risk_score, factors = detector.calculate_risk_score(transaction_data)
     risk_level = get_risk_level(risk_score)
 
-    # Add calculated fields
-    transaction_data["risk_score"] = risk_score
-    transaction_data["risk_level"] = risk_level
-    transaction_data["factors"] = factors
+    # Create transaction in database
+    db_transaction = db_service.create_transaction(
+        db,
+        amount=transaction_data["amount"],
+        payee=transaction_data["payee"],
+        timestamp=transaction_data["timestamp"],
+        reference=transaction_data["reference"],
+        payee_is_new=transaction_data.get("payee_is_new", False),
+        risk_score=risk_score,
+        risk_level=risk_level,
+        factors=factors,
+    )
 
-    # Store transaction
-    transaction_id = transaction_store.add(transaction_data)
-
-    # Retrieve and return
-    stored = transaction_store.get(transaction_id)
     return TransactionResponse(
-        id=stored["id"],
-        amount=stored["amount"],
-        payee=stored["payee"],
-        timestamp=stored["timestamp"],
-        reference=stored["reference"],
-        risk_score=stored["risk_score"],
-        risk_level=stored["risk_level"],
-        created_at=stored["created_at"],
+        id=str(db_transaction.id),
+        amount=db_transaction.amount,
+        payee=db_transaction.payee,
+        timestamp=db_transaction.timestamp,
+        reference=db_transaction.reference,
+        risk_score=db_transaction.risk_score,
+        risk_level=db_transaction.risk_level,
+        created_at=db_transaction.created_at,
     )
 
 
@@ -161,6 +212,7 @@ async def create_transaction(
 async def list_transactions(
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
+    db: Session = Depends(get_db),
 ):
     """
     Retrieve a paginated list of all transactions with their risk scores.
@@ -168,21 +220,21 @@ async def list_transactions(
     Results are sorted by creation date (newest first).
     """
     skip = (page - 1) * page_size
-    items, total = transaction_store.get_all(skip=skip, limit=page_size)
+    items, total = db_service.list_transactions(db, skip=skip, limit=page_size)
 
     total_pages = (total + page_size - 1) // page_size if total > 0 else 0
 
     return PaginatedResponse(
         items=[
             TransactionResponse(
-                id=item["id"],
-                amount=item["amount"],
-                payee=item["payee"],
-                timestamp=item["timestamp"],
-                reference=item["reference"],
-                risk_score=item["risk_score"],
-                risk_level=item["risk_level"],
-                created_at=item["created_at"],
+                id=str(item.id),
+                amount=item.amount,
+                payee=item.payee,
+                timestamp=item.timestamp,
+                reference=item.reference,
+                risk_score=item.risk_score,
+                risk_level=item.risk_level,
+                created_at=item.created_at,
             )
             for item in items
         ],
@@ -201,6 +253,7 @@ async def list_transactions(
 )
 async def get_transaction(
     transaction_id: str,
+    db: Session = Depends(get_db),
     detector: AnomalyDetectorProtocol = Depends(get_anomaly_detector),
     generator: ExplanationGeneratorProtocol = Depends(get_explanation_generator),
 ):
@@ -210,7 +263,7 @@ async def get_transaction(
     The response includes the risk assessment explanation, confidence level,
     identified risk factors, and recommended action.
     """
-    transaction = transaction_store.get(transaction_id)
+    transaction = db_service.get_transaction(db, transaction_id)
 
     if transaction is None:
         raise HTTPException(
@@ -219,28 +272,56 @@ async def get_transaction(
         )
 
     # Get stored risk data or recalculate
-    risk_score = transaction.get("risk_score")
-    factors = transaction.get("factors", [])
-
-    if risk_score is None:
-        risk_score, factors = detector.calculate_risk_score(transaction)
-
-    # Generate explanation
-    explanation_data = generator.generate_explanation(
-        transaction=transaction,
-        risk_score=risk_score,
-        factors=factors,
-    )
+    risk_score = transaction.risk_score
+    factors = transaction.factors or []
+    
+    # Use cached explanation or generate new one
+    if transaction.explanation:
+        # Use cached explanation data
+        explanation_data = {
+            "confidence": transaction.confidence,
+            "explanation": transaction.explanation,
+            "risk_factors": transaction.risk_factors_detailed or [],
+            "recommended_action": transaction.recommended_action,
+            "risk_level": transaction.risk_level,
+        }
+    else:
+        # Generate explanation and cache it
+        transaction_dict = {
+            "amount": transaction.amount,
+            "payee": transaction.payee,
+            "timestamp": transaction.timestamp,
+            "reference": transaction.reference,
+            "payee_is_new": transaction.payee_is_new,
+        }
+        
+        explanation_data = generator.generate_explanation(
+            transaction=transaction_dict,
+            risk_score=risk_score,
+            factors=factors,
+        )
+        
+        # Cache the explanation
+        db_service.update_transaction(
+            db,
+            transaction_id,
+            {
+                "confidence": explanation_data.get("confidence"),
+                "explanation": explanation_data.get("explanation"),
+                "risk_factors_detailed": explanation_data.get("risk_factors"),
+                "recommended_action": explanation_data.get("recommended_action"),
+            },
+        )
 
     return TransactionDetailResponse(
-        id=transaction["id"],
-        amount=transaction["amount"],
-        payee=transaction["payee"],
-        timestamp=transaction["timestamp"],
-        reference=transaction["reference"],
+        id=str(transaction.id),
+        amount=transaction.amount,
+        payee=transaction.payee,
+        timestamp=transaction.timestamp,
+        reference=transaction.reference,
         risk_score=risk_score,
         risk_level=explanation_data["risk_level"],
-        created_at=transaction["created_at"],
+        created_at=transaction.created_at,
         confidence=explanation_data["confidence"],
         explanation=explanation_data["explanation"],
         risk_factors=explanation_data["risk_factors"],
@@ -254,13 +335,16 @@ async def get_transaction(
     tags=["Transactions"],
     summary="Mark transaction as approved/legitimate",
 )
-async def approve_transaction(transaction_id: str):
+async def approve_transaction(
+    transaction_id: str,
+    db: Session = Depends(get_db),
+):
     """
     Approve a transaction, marking it as legitimate.
     
     Updates the transaction status to 'approved'.
     """
-    transaction = transaction_store.get(transaction_id)
+    transaction = db_service.get_transaction(db, transaction_id)
     
     if transaction is None:
         raise HTTPException(
@@ -269,27 +353,26 @@ async def approve_transaction(transaction_id: str):
         )
     
     # Update status
-    transaction_store.update(
+    updated = db_service.update_transaction(
+        db,
         transaction_id,
         {
             "status": "approved",
             "reviewed_at": datetime.utcnow(),
         },
         audit_action="approved",
-        audit_details="Transaction marked as legitimate"
+        audit_details={"status_change": "pending -> approved"},
     )
     
-    updated = transaction_store.get(transaction_id)
-    
     return TransactionResponse(
-        id=updated["id"],
-        amount=updated["amount"],
-        payee=updated["payee"],
-        timestamp=updated["timestamp"],
-        reference=updated["reference"],
-        risk_score=updated["risk_score"],
-        risk_level=updated["risk_level"],
-        created_at=updated["created_at"],
+        id=str(updated.id),
+        amount=updated.amount,
+        payee=updated.payee,
+        timestamp=updated.timestamp,
+        reference=updated.reference,
+        risk_score=updated.risk_score,
+        risk_level=updated.risk_level,
+        created_at=updated.created_at,
     )
 
 
@@ -299,13 +382,16 @@ async def approve_transaction(transaction_id: str):
     tags=["Transactions"],
     summary="Get audit trail for a transaction",
 )
-async def get_audit_trail(transaction_id: str):
+async def get_audit_trail(
+    transaction_id: str,
+    db: Session = Depends(get_db),
+):
     """
     Retrieve the complete audit trail for a transaction.
     
     Shows all actions taken on the transaction (creation, approvals, rejections, etc).
     """
-    transaction = transaction_store.get(transaction_id)
+    transaction = db_service.get_transaction(db, transaction_id)
     
     if transaction is None:
         raise HTTPException(
@@ -314,15 +400,15 @@ async def get_audit_trail(transaction_id: str):
         )
     
     # Get audit log entries
-    audit_entries = transaction_store.get_audit_trail(transaction_id)
+    audit_entries = db_service.get_audit_trail(db, transaction_id)
     
     return TransactionAuditResponse(
         transaction_id=transaction_id,
         audit_trail=[
             AuditLogEntry(
-                timestamp=entry["timestamp"],
-                action=entry["action"],
-                details=entry.get("details", "")
+                timestamp=entry.created_at,
+                action=entry.action,
+                details=entry.details or {}
             )
             for entry in audit_entries
         ]
@@ -334,13 +420,16 @@ async def get_audit_trail(transaction_id: str):
     tags=["Transactions"],
     summary="Mark transaction as fraud/rejected",
 )
-async def reject_transaction(transaction_id: str):
+async def reject_transaction(
+    transaction_id: str,
+    db: Session = Depends(get_db),
+):
     """
     Reject a transaction, marking it as fraud.
     
     Updates the transaction status to 'rejected'.
     """
-    transaction = transaction_store.get(transaction_id)
+    transaction = db_service.get_transaction(db, transaction_id)
     
     if transaction is None:
         raise HTTPException(
@@ -349,25 +438,24 @@ async def reject_transaction(transaction_id: str):
         )
     
     # Update status
-    transaction_store.update(
+    updated = db_service.update_transaction(
+        db,
         transaction_id,
         {
             "status": "rejected",
             "reviewed_at": datetime.utcnow(),
         },
         audit_action="rejected",
-        audit_details="Transaction marked as fraud"
+        audit_details={"status_change": "pending -> rejected"},
     )
     
-    updated = transaction_store.get(transaction_id)
-    
     return TransactionResponse(
-        id=updated["id"],
-        amount=updated["amount"],
-        payee=updated["payee"],
-        timestamp=updated["timestamp"],
-        reference=updated["reference"],
-        risk_score=updated["risk_score"],
-        risk_level=updated["risk_level"],
-        created_at=updated["created_at"],
+        id=str(updated.id),
+        amount=updated.amount,
+        payee=updated.payee,
+        timestamp=updated.timestamp,
+        reference=updated.reference,
+        risk_score=updated.risk_score,
+        risk_level=updated.risk_level,
+        created_at=updated.created_at,
     )
